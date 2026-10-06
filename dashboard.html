@@ -228,8 +228,8 @@
       let countAktif = 0;
       let countKosong = 0;
 
-      // Render daftar untuk kartu 01 sampai 12
-      for (let i = 1; i <= 12; i++) {
+      // Render daftar untuk kartu 01 sampai 100
+      for (let i = 1; i <= 100; i++) {
         const idStr = String(i).padStart(2, '0');
         const activeUrl = database[idStr] || "";
         const isAktif = Boolean(activeUrl);
