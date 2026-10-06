@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Manajemen Kartu TikTok</title>
+  <title>Dashboard Manajemen Kartu TikTok (Unlimited)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -21,47 +21,74 @@
       padding: 20px 24px;
       border-radius: 14px;
       border: 1px solid #334155;
+      margin-bottom: 20px;
+    }
+    .top-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
-    .header-title h2 {
-      margin: 0 0 6px;
-      font-size: 20px;
-      color: #fff;
-    }
-    .header-title p {
-      margin: 0;
-      font-size: 13px;
-      color: #94a3b8;
-    }
-    .summary-badge {
+    .header-title h2 { margin: 0 0 6px; font-size: 20px; color: #fff; }
+    .header-title p { margin: 0; font-size: 13px; color: #94a3b8; }
+    
+    .stats-row {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
     }
     .badge-stat {
       background: #0f172a;
       border: 1px solid #334155;
-      padding: 8px 14px;
+      padding: 6px 14px;
       border-radius: 8px;
       font-size: 13px;
     }
-    .btn-refresh {
+    
+    /* Panel Kontrol Rentang & Pencarian */
+    .filter-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: #0f172a;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .filter-group input {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .filter-group input:focus { border-color: #fe2c55; }
+    .btn-apply {
       background: #3b82f6;
       color: #fff;
       border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
       font-size: 13px;
     }
-    .btn-refresh:hover { background: #2563eb; }
+    .btn-apply:hover { background: #2563eb; }
 
-    /* Grid Kartu */
+    /* Daftar Kartu */
     .card-list {
       display: flex;
       flex-direction: column;
@@ -77,19 +104,15 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      transition: border-color 0.2s;
     }
-    .card-item.active-card {
-      border-left: 5px solid #10b981;
-    }
-    .card-item.inactive-card {
-      border-left: 5px solid #64748b;
-    }
+    .card-item.active-card { border-left: 5px solid #10b981; }
+    .card-item.inactive-card { border-left: 5px solid #64748b; }
+    
     .col-id {
       display: flex;
       align-items: center;
       gap: 12px;
-      min-width: 170px;
+      min-width: 160px;
     }
     .id-tag {
       background: #fe2c55;
@@ -98,7 +121,6 @@
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 14px;
-      letter-spacing: 0.5px;
     }
     .status-pill {
       font-size: 12px;
@@ -132,6 +154,7 @@
       outline: none;
     }
     .url-input:focus { border-color: #fe2c55; }
+    
     .col-btns {
       display: flex;
       gap: 8px;
@@ -170,44 +193,58 @@
       align-items: center;
     }
     .btn-link:hover { background: #475569; }
-    .btn-disabled {
-      opacity: 0.35;
-      pointer-events: none;
-    }
+    .btn-disabled { opacity: 0.35; pointer-events: none; }
   </style>
 </head>
 <body>
 
   <div class="wrapper">
     <div class="header-panel">
-      <div class="header-title">
-        <h2>Dashboard Kontrol Kartu TikTok</h2>
-        <p>Pantau status kartu, edit link tujuan, atau reset kartu secara instan.</p>
+      <div class="top-row">
+        <div class="header-title">
+          <h2>Dashboard Kontrol Kartu TikTok (Unlimited System)</h2>
+          <p>Kelola tautan kartu tanpa batasan jumlah ID.</p>
+        </div>
+        <div class="stats-row">
+          <div class="badge-stat">Aktif di DB: <strong id="countAktif" style="color:#34d399;">0</strong></div>
+          <button class="btn-apply" onclick="fetchDatabase()">Segarkan DB</button>
+        </div>
       </div>
-      <div class="summary-badge">
-        <div class="badge-stat">Aktif: <strong id="countAktif" style="color:#34d399;">0</strong></div>
-        <div class="badge-stat">Kosong: <strong id="countKosong" style="color:#94a3b8;">12</strong></div>
-        <button class="btn-refresh" onclick="fetchDatabase()">Segarkan</button>
+
+      <!-- Alat Pengatur Rentang Tampilan ID -->
+      <div class="filter-panel">
+        <div class="filter-group">
+          <label>Tampilkan Urutan ID Sampai:</label>
+          <input type="number" id="maxDisplayRange" value="12" min="1" style="width: 80px;">
+        </div>
+        <button class="btn-apply" onclick="renderDashboard()">Terapkan Urutan</button>
+
+        <div class="filter-group" style="margin-left: auto;">
+          <label>Buka/Cari ID Khusus:</label>
+          <input type="text" id="customIdSearch" placeholder="misal: 100 atau VIP-01" style="width: 160px;">
+          <button class="btn-apply" style="background:#fe2c55;" onclick="addSpecificId()">Tampilkan</button>
+        </div>
       </div>
     </div>
 
-    <!-- Container Daftar Kartu 01 - 12 -->
+    <!-- Container Daftar Kartu -->
     <div class="card-list" id="cardListContainer">
-      <div style="text-align: center; color: #94a3b8; padding: 40px;">Mengambil data kartu dari cloud...</div>
+      <div style="text-align: center; color: #94a3b8; padding: 40px;">Mengambil data cloud...</div>
     </div>
   </div>
 
   <script>
-    // ================= MASUKKAN KUNCI JSONBIN ANDA DI SINI =================
-    const BIN_ID = "6ac46697ac6210605a17a0b5";
-    const MASTER_KEY = "$2a$10$yKQtCYKsrF4d/2K57UOh8.1pWtZpGK6cv.4Y9Gm70oXaMQ28lA/my";
-    // =======================================================================
+    // ================= MASUKKAN KREDENSIAL JSONBIN =================
+    const BIN_ID = "MASUKKAN_BIN_ID_ANDA_DISINI";
+    const MASTER_KEY = "MASUKKAN_MASTER_KEY_ANDA_DISINI";
+    // ===============================================================
 
     let database = {};
+    const extraCustomIds = new Set();
 
     async function fetchDatabase() {
       const container = document.getElementById('cardListContainer');
-      container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px;">Memperbarui daftar...</div>';
+      container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px;">Memperbarui data dari cloud...</div>';
 
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -217,7 +254,7 @@
         database = data.record || {};
         renderDashboard();
       } catch (err) {
-        container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Gagal mengambil data. Pastikan BIN_ID dan MASTER_KEY sudah benar.</div>';
+        container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Gagal memuat database. Periksa BIN_ID dan MASTER_KEY.</div>';
       }
     }
 
@@ -225,17 +262,36 @@
       const container = document.getElementById('cardListContainer');
       container.innerHTML = "";
 
-      let countAktif = 0;
-      let countKosong = 0;
+      // 1. Kumpulkan semua ID yang akan ditampilkan
+      const idSet = new Set();
 
-      // Render daftar untuk kartu 01 sampai 100
-      for (let i = 1; i <= 100; i++) {
-        const idStr = String(i).padStart(2, '0');
+      // Masukkan rentang nomor urut (default 1 s/d input range)
+      const maxRange = parseInt(document.getElementById('maxDisplayRange').value, 10) || 12;
+      for (let i = 1; i <= maxRange; i++) {
+        idSet.add(String(i).padStart(2, '0'));
+      }
+
+      // Otomatis masukkan SEMUA ID yang sudah aktif di database (unlimited)
+      Object.keys(database).forEach(id => idSet.add(id));
+
+      // Masukkan custom ID yang dicari manual
+      extraCustomIds.forEach(id => idSet.add(id));
+
+      // Urutkan ID (numerik terlebih dahulu, lalu string)
+      const sortedIds = Array.from(idSet).sort((a, b) => {
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.localeCompare(b);
+      });
+
+      let countAktif = 0;
+
+      // Render setiap kartu
+      sortedIds.forEach(idStr => {
         const activeUrl = database[idStr] || "";
         const isAktif = Boolean(activeUrl);
-
         if (isAktif) countAktif++;
-        else countKosong++;
 
         const item = document.createElement('div');
         item.className = `card-item ${isAktif ? 'active-card' : 'inactive-card'}`;
@@ -243,7 +299,7 @@
         item.innerHTML = `
           <div class="col-id">
             <span class="id-tag">ID: ${idStr}</span>
-            <span class="status-pill ${isAktif ? 'aktif' : 'kosong'}">${isAktif ? '● Aktif' : '○ Belum Aktif'}</span>
+            <span class="status-pill ${isAktif ? 'aktif' : 'kosong'}">${isAktif ? '● Aktif' : '○ Kosong'}</span>
           </div>
 
           <div class="col-input">
@@ -260,17 +316,31 @@
         `;
 
         container.appendChild(item);
-      }
+      });
 
       document.getElementById('countAktif').innerText = countAktif;
-      document.getElementById('countKosong').innerText = countKosong;
     }
 
-    // 1. Simpan / Edit Link Kartu
+    // Tambah / Buka ID Tertentu Langsung
+    function addSpecificId() {
+      const val = document.getElementById('customIdSearch').value.trim();
+      if (!val) return;
+      extraCustomIds.add(val);
+      renderDashboard();
+      document.getElementById('customIdSearch').value = "";
+      
+      // Auto-scroll ke input ID tersebut
+      setTimeout(() => {
+        const targetInput = document.getElementById(`input_${val}`);
+        if (targetInput) targetInput.focus();
+      }, 100);
+    }
+
+    // Simpan / Edit Link
     async function saveLink(cardId) {
       let val = document.getElementById(`input_${cardId}`).value.trim();
       if (!val) {
-        alert("Link TikTok tidak boleh kosong. Jika ingin mengosongkan kartu, gunakan tombol Reset.");
+        alert("Link TikTok tidak boleh kosong. Gunakan tombol Reset untuk mengosongkan.");
         return;
       }
 
@@ -282,17 +352,16 @@
       await syncToCloud(`Kartu ${cardId} berhasil diupdate ke link baru!`);
     }
 
-    // 2. Reset Kartu (Menghapus link dari database sehingga kartu kembali kosong)
+    // Reset Kartu (Menghapus link dari database)
     async function resetKartu(cardId) {
-      const ask = confirm(`Apakah Anda yakin ingin MERESET Kartu ${cardId}?\n\nLink TikTok akan dihapus, dan kartu ini akan kembali meminta aktivasi saat di-scan atau di-tap.`);
+      const ask = confirm(`Reset Kartu ${cardId}?\nLink TikTok akan dihapus dan kartu akan kembali kosong.`);
       if (!ask) return;
 
       delete database[cardId];
-      document.getElementById(`input_${cardId}`).value = "";
       await syncToCloud(`Kartu ${cardId} berhasil di-reset menjadi kosong!`);
     }
 
-    // 3. Sinkronisasi Data ke JSONBin
+    // Sinkronisasi ke JSONBin
     async function syncToCloud(pesanSukses) {
       try {
         await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
@@ -307,11 +376,10 @@
         alert(pesanSukses);
         renderDashboard();
       } catch (err) {
-        alert("Gagal menyimpan ke server cloud!");
+        alert("Gagal sinkronisasi data ke cloud!");
       }
     }
 
-    // Ambil data pertama kali saat halaman dibuka
     fetchDatabase();
   </script>
 </body>
